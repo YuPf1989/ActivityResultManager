@@ -9,5 +9,5 @@ import android.content.Intent;
  * activityResult返回的结果
  */
 public interface IResultCallback {
-    void getResultCallback(Intent data);
+    void getResultCallback(int requestCode, int resultCode, Intent data);
 }

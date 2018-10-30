@@ -1,7 +1,7 @@
 package com.rain.activityresultmanager.activity_result_manager;
 
 import android.content.Intent;
-import android.os.Bundle;
+import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 
@@ -10,41 +10,42 @@ import android.support.v4.app.FragmentManager;
  * Date:2018/10/29 10:45
  * Description:
  * 专门用于处理startActivityForResult的工具类
+ * 参见：https://github.com/AnotherJack/AvoidOnResult
  */
 public class ActivityResultManager {
-    private  FragmentActivity mActivity;
-    private FragmentManager fragmentManager;
-    private BindFragment bindFragment;
-    private static final String BINDFRAGMENT  = "BINDFRAGMENT";
-    public static int mRequestCode;
-    public static IResultCallback mResultCallback;
+    private  BindFragment bindFragment;
+    private static final String BINDFRAGMENT = "BINDFRAGMENT";
 
     public ActivityResultManager(FragmentActivity activity) {
-        mActivity = activity;
-        bindFragment();
+        bindFragment = bindFragment(activity);
     }
 
-    public ActivityResultManager startActivityForResult(Intent intent,int requestCode) {
-        mRequestCode = requestCode;
-        // 注意必须用fragment调用，才能在fragment中的onActivityResult中获取到值
-        bindFragment.startActivityForResult(intent,requestCode);
-        return this;
+    public ActivityResultManager(Fragment fragment) {
+        this(fragment.getActivity());
     }
 
-    public ActivityResultManager startActivityForResult(Intent intent, int requestCode, Bundle bundle) {
-        mRequestCode = requestCode;
-        bindFragment.startActivityForResult(intent,requestCode,bundle);
-        return this;
+    public void startForResult(Intent intent, int requestCode, IResultCallback callback) {
+        bindFragment.startForResult(intent, requestCode, callback);
     }
 
-    private void bindFragment() {
-        fragmentManager = mActivity.getSupportFragmentManager();
-        bindFragment = BindFragment.newInstance();
-        fragmentManager.beginTransaction().add(bindFragment,BINDFRAGMENT).commit();
+    public void startForResult(Class<?> clazz, int requestCode, IResultCallback callback) {
+        Intent intent = new Intent(bindFragment.getActivity(), clazz);
+        startForResult(intent, requestCode, callback);
     }
 
-    public ActivityResultManager setResultCallbackListenter(IResultCallback resultCallback) {
-        mResultCallback = resultCallback;
-        return this;
+    private BindFragment bindFragment(FragmentActivity activity) {
+        BindFragment bindFragment = getBindFragment(activity);
+        if (bindFragment == null) {
+            FragmentManager fragmentManager = activity.getSupportFragmentManager();
+            bindFragment = BindFragment.newInstance();
+            fragmentManager.beginTransaction().add(bindFragment, BINDFRAGMENT).commitAllowingStateLoss();
+            fragmentManager.executePendingTransactions();
+        }
+        return bindFragment;
     }
+
+    private BindFragment getBindFragment(FragmentActivity activity) {
+        return (BindFragment) activity.getSupportFragmentManager().findFragmentByTag(BINDFRAGMENT);
+    }
+
 }

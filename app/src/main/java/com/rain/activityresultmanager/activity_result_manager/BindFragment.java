@@ -7,6 +7,9 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.widget.Toast;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import static android.app.Activity.RESULT_OK;
 
 /**
@@ -18,12 +21,13 @@ import static android.app.Activity.RESULT_OK;
  */
 public class BindFragment extends Fragment {
     private static final String TAG = "BindFragment";
-    private FragmentActivity mActivity;
+    private Map<Integer, IResultCallback> mCallbacks = new HashMap<>();
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
-        mActivity = getActivity();
         super.onCreate(savedInstanceState);
+        // 当其所依附的activity重建时，fragment不重建，填充到新的activity中
+        setRetainInstance(true);
     }
 
     public static BindFragment newInstance() {
@@ -36,19 +40,15 @@ public class BindFragment extends Fragment {
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (resultCode == RESULT_OK) {
-            if (requestCode == ActivityResultManager.mRequestCode) {
-                if (ActivityResultManager.mResultCallback != null) {
-                    ActivityResultManager.mResultCallback.getResultCallback(data);
-                }
-            }
-        } else {
-            Toast.makeText(mActivity, "用户取消", Toast.LENGTH_SHORT).show();
+        IResultCallback callback = mCallbacks.remove(requestCode);
+        if (callback != null) {
+            callback.getResultCallback(requestCode, resultCode, data);
         }
-//        removeFragment();
     }
 
-    private void removeFragment() {
-        getFragmentManager().beginTransaction().remove(this);
+    public void startForResult(Intent intent, int requestCode, IResultCallback callback) {
+        mCallbacks.put(requestCode, callback);
+        startActivityForResult(intent, requestCode);
     }
+
 }

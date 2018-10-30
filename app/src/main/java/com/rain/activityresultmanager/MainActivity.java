@@ -21,32 +21,21 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         // 必须在activity生命周期方法中初始化
-        resultManager = new ActivityResultManager(MainActivity.this);
+//        resultManager = new ActivityResultManager(MainActivity.this);
         findViewById(R.id.btn_start_two).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(MainActivity.this, SecondActivity.class);
-                resultManager.setResultCallbackListenter(new IResultCallback() {
-                    @Override
-                    public void getResultCallback(Intent data) {
-                        String s = data.getStringExtra("data");
-                        Toast.makeText(MainActivity.this, "结果：" + s, Toast.LENGTH_SHORT).show();
-                    }
-                })
-                        .startActivityForResult(intent, 01)
-                ;
+                new ActivityResultManager(MainActivity.this)
+                        .startForResult(SecondActivity.class, 0, new IResultCallback() {
+                            @Override
+                            public void getResultCallback(int requestCode, int resultCode, Intent data) {
+                                String s = data.getStringExtra("data");
+                                Toast.makeText(MainActivity.this, s, Toast.LENGTH_SHORT).show();
+                            }
+                        });
             }
         });
     }
 
-//    @Override
-//    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-//        if (resultCode == RESULT_OK) {
-//            if (requestCode == ActivityResultManager.mRequestCode) {
-//                String s = data.getStringExtra("data");
-//                Log.e(TAG, "onActivityResult: " + s);
-//            }
-//        }
-//        super.onActivityResult(requestCode, resultCode, data);
-//    }
 }
